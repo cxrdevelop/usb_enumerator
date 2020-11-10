@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
                 ("p,pid", "PID", cxxopts::value<std::uint16_t>())
                 ("m,message", "Mesage", cxxopts::value<std::string>()->default_value({}))                
                 ("i,in", "In EndPoint", cxxopts::value<std::uint16_t>()->default_value("1"))
-                ("o,out", "Out EndPoint", cxxopts::value<std::uint16_t>()->default_value("1"))
+                ("o,out", "Out EndPoint", cxxopts::value<std::uint16_t>()->default_value("2"))
                 ("period", "Period, ms", cxxopts::value<std::uint32_t>())
                 ;
 
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
         enumerateDevice(vid, pid);
 
         if (message.empty()) return 0;
+
         bool once{true};
         int pause{0};
         if (result["period"].count()) {

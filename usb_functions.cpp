@@ -598,7 +598,8 @@ void enumerate(std::shared_ptr<LibUSB::Device> pDevice) {
         }
 
         // Iterate the Interface descriptors
-        for(int i = 0; i < pActiveConfiguration->NumInterfaces(); i++)
+        int number = pActiveConfiguration->NumInterfaces();
+        for(int i = 0; i < number; i++)
         {
             // Iterate the Interfaces (NOTE: If you're looking for a specific interface number, you should use getInterface(int interfaceNumber) instead!)
             std::shared_ptr<LibUSB::Interface> pInterface = pActiveConfiguration->getInterfaceByIndex(i);
@@ -630,7 +631,7 @@ void enumerate(std::shared_ptr<LibUSB::Device> pDevice) {
                     std::shared_ptr<LibUSB::Endpoint> pEndpoint = pInterface->getEndpoint(epnum.second);
 
                     /// Endpoint information
-                    std::wcout << L"\t\t\tEndpoint number: " << std::dec << pEndpoint->Number() << std::endl;
+                    std::wcout << L"\t\t\tEndpoint number: 0x" << std::hex << pEndpoint->Number() << std::endl;
                     std::wcout << L"\t\t\tMaxPacketSize: " << std::dec << pEndpoint->MaxPacketSize() << std::endl;
                     std::wcout << L"\t\t\tPolling Interval: " << std::dec << pEndpoint->PollingInterval() << std::endl;
                     std::wcout << L"\t\t\tTransfer Type: ";
@@ -723,8 +724,8 @@ void enumerate(std::shared_ptr<LibUSB::Device> pDevice) {
 void enumerateDevice(std::uint16_t vid, std::uint16_t pid) {
     auto devices = LibUSB::LibUSB::FindDevice(vid, pid);
 
-    std::wcout << "Found " << devices.size() << " devices with vid: "
-               << vid << " pid: " << pid << std::endl;
+    std::wcout << "Found " << devices.size() << " devices with vid: 0x"
+               << std::hex << vid << " pid: 0x" << pid << std::endl;
 
     for (auto pDevice : devices) {
         enumerate(pDevice);
@@ -756,7 +757,7 @@ std::optional<std::string> sendMessage(std::uint16_t vid, std::uint16_t pid, std
 
         pDevice->Open();
 
-        std::shared_ptr<LibUSB::Interface> pInterface = pDevice->getActiveConfiguration()->getInterface(0);
+        std::shared_ptr<LibUSB::Interface> pInterface = pDevice->getActiveConfiguration()->getInterface(2);
 
 
         // Note that at this point, the alternate setting is in it's default position. You can get endpoints, or choose a different alternate setting, if you wanted.
@@ -817,7 +818,7 @@ std::optional<std::string> sendMessage(std::uint16_t vid, std::uint16_t pid, std
 
         // Receive Interrupt from device
         std::wcout << L"Awaiting Bulk data from device..." << std::endl;
-        pTransferIN->SetTimeout(std::chrono::milliseconds(500));
+        pTransferIN->SetTimeout(std::chrono::milliseconds(timeout));
         pTransferIN->Start();		// Normally, you'd handle this asynchronously.
 
         std::string answer;

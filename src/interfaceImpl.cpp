@@ -132,15 +132,19 @@ uint8_t LibUSB::InterfaceImpl::NumAlternateSettings() const
 void LibUSB::InterfaceImpl::Claim()
 {
 
-
-
 	if (m_pDeviceImpl.expired())
 	{
 		throw std::logic_error("LibUSB::InterfaceImpl::Claim(): Called with expired DeviceImpl.");
 	}
 
+    if (libusb_kernel_driver_active(m_pDeviceImpl.lock()->m_pHandle.get(), m_pInterface->altsetting[m_alternateSetting].bInterfaceNumber))
+    {
+        libusb_detach_kernel_driver(m_pDeviceImpl.lock()->m_pHandle.get(), m_pInterface->altsetting[m_alternateSetting].bInterfaceNumber);
+    }
+
 	// Claim the interface
-	int Result = libusb_claim_interface(m_pDeviceImpl.lock()->m_pHandle.get(), m_pInterface->altsetting[m_alternateSetting].bInterfaceNumber);
+    int Result = libusb_claim_interface(m_pDeviceImpl.lock()->m_pHandle.get(),
+                                        m_pInterface->altsetting[m_alternateSetting].bInterfaceNumber);
 
 	switch(Result)
 	{

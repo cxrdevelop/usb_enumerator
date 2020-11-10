@@ -53,7 +53,7 @@ uint8_t LibUSB::EndpointImpl::Address() const
 uint8_t LibUSB::EndpointImpl::Number() const
 {
 	// Retrieve bits 0-3 of the endpoint address
-	return (m_pEndpointDescriptor->bEndpointAddress & 0x0F);
+    return (m_pEndpointDescriptor->bEndpointAddress/* & 0x0F*/);
 
 }
 

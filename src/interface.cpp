@@ -113,7 +113,8 @@ LibUSB::Interface::EndpointNumbers_t LibUSB::Interface::getEndpointNumbers() con
 	EndpointNumbers_t mEndpointNumbers;
 
 	// Create each endpoint number
-	for (int i = 1; i <= NumEndpoints(); i++)
+    int number = NumEndpoints();
+    for (int i = 1; i <= number; i++)
 	{
 		mEndpointNumbers.insert(std::make_pair(i,getEPNumberByIndex(i)));
 	}
