@@ -4,18 +4,16 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <ios>
 #include <list>
 #include "headers/libusb-cpp.hpp"
 #include "string_allocation.h"
 
-
 // Test results
 std::list<std::wstring> testNames;
 std::list<bool> testResults;
 std::list<std::wstring> testFailureReasons;
-
-
 
 // No using statements - I want it to be clear where everything is located.
 
@@ -793,10 +791,10 @@ std::optional<std::string> sendMessage(std::uint16_t vid, std::uint16_t pid, std
         std::shared_ptr<unsigned char> pPingString = allocString(message.c_str(), pingDataSize);
         pTransferOUT->setTransferBuffer(pPingString, pingDataSize);
 
-        size_t returnDataSize = pingDataSize;
+        static constexpr size_t returnDataSize = 255;
         std::shared_ptr<unsigned char> pReturnString(new unsigned char[returnDataSize], [](unsigned char* ptr){ delete [] ptr; });
         std::fill_n(pReturnString.get(), returnDataSize, '\0');
-        pTransferIN->SetTimeout(std::chrono::milliseconds(timeout));
+        pTransferIN->SetTimeout(std::chrono::milliseconds(timeout * 10));
         pTransferIN->setTransferBuffer(pReturnString, returnDataSize);
 
         // Send "Ping!" to the device
@@ -821,11 +819,22 @@ std::optional<std::string> sendMessage(std::uint16_t vid, std::uint16_t pid, std
         pTransferIN->SetTimeout(std::chrono::milliseconds(timeout));
         pTransferIN->Start();		// Normally, you'd handle this asynchronously.
 
-        std::string answer;
+        std::optional<std::string> answer{};
         if (pTransferIN->isComplete() && pTransferIN->isSuccessful())
         {
-            std::wcout << L"Bulk IN received: \"" << (char*)pTransferIN->getTransferBuffer().get() << L"\" (" << pTransferIN->BytesTransferred() << L")" << std::endl;
-            answer = std::string{(char*)pTransferIN->getTransferBuffer().get()};
+            std::size_t size = pTransferIN->BytesTransferred();
+            if (size > returnDataSize) {
+                std::wcout << L"Received size "<< size << L"is bigger than buffer size: " << returnDataSize << L")"<< std::endl;
+            } else {
+                //auto *ptr = pTransferIN->getTransferBuffer().get();
+
+                std::wcout << L"Bulk IN received: \"" << (char*)pReturnString.get() << L"\" (" << size << L")" << std::endl;
+                unsigned char *ptr = pReturnString.get();
+                char buffer[returnDataSize];
+                memcpy(buffer, ptr, returnDataSize);
+                std::wcout << L"Bulk IN received: \"" << buffer << L"\" (" << size << L")" << std::endl;
+                answer.emplace(buffer);
+            }
         }
         else
         {
